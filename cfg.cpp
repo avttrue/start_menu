@@ -106,13 +106,30 @@ string cfg::getSelValue()
 // проверить на наличие ошибок
 bool cfg::check()
 {
-    int selindex = stoi(map<string, string>::operator [] ("@"));
-    if (selindex < 0 || selindex >= count)
+    int selindex;
+    bool error = false;
+    
+    try 
     {
-        selindex = 0;
+        selindex = stoi(map<string, string>::operator [] ("@"));
+    }
+    catch (std::invalid_argument) 
+    {
+        error = true;
+    }
+
+    if (selindex < 0 || selindex >= count)
+        error = true;
+
+    if(error)
+    {
+        map<string, string>::erase("@");
+        map<string, string>::insert(pair<string, string>("@", "0"));  
+
         std::cout << '\a';
         return false;
     }
+
     return true;
 }
 
