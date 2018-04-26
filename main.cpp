@@ -2,12 +2,15 @@
     МЕНЮ ЗАГРУЗКИ
     Трифонов Александр (ОКВ СФЗ) truetrifonov@yandex.ru
     ---------------------------------------------------
+    CFGMAIN - файл конфигурации программы
+    SFGMENU - файл конфигурации меню
     Программа ждёт "wait" секунд, которые указаны в CFGMAIN
     В течении указанного времени нужно нажать клавишу KEYMENU
-    После этого отображается меню загрузки, которое прочитывается из файла CFGMENU
-    При помощи клавиш KEYUP, KEYDOWN производится выбор
-    KEYSELECT - клавиша подтверждения
-    После подтверждения запускается на выполнение выбранная команда
+    После этого отображается меню загрузки, которое настраивается в CFGMENU
+    При помощи клавиш key_up и key_down (CFGMAIN) производится выбор,
+    key_select (CFGMAIN) - клавиша подтверждения
+    После подтверждения запускается на выполнение выбранная команда, 
+    CFGMAIN переписывается
 */
 
 #include <fstream>
@@ -20,19 +23,17 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <conio.h>
-#define FSEP "\\"
+#define FSEP "\\"           // разделитель в фс
 #endif
 
 #ifdef __linux__
-
 #include <unistd.h>
 #include "mygetch.h"
-
-#define FSEP "/"
+#define FSEP "/"            // разделитель в фс
 #endif
 
-#define CFGMAIN "cfg.cfg"
-#define CFGMENU "menu.cfg"
+#define CFGMAIN "cfg.cfg"   // файл конфигурации программы
+#define CFGMENU "menu.cfg"  // файл конфигурации меню
 #define KEYMENU 10          // код кнопки вызова меню
 
 // ожидание нажатия условленной клавиши из отдельного потока
@@ -61,7 +62,7 @@ void wait()
 }
 
 // очистка экрана
-void clear()
+void clearScreen()
 {
 #ifdef _WIN32
     system("cls");
@@ -76,7 +77,7 @@ void clear()
 void run(string cmd)
 {
     int ret = -1;
-    clear();
+    clearScreen();
 
 #ifdef _WIN32
     ret = system(cmd.c_str());
@@ -95,7 +96,7 @@ void drawMenu(cfg menu)
     int index = std::stoi(menu["@"]);
     int counter = 0;
     
-    clear();
+    clearScreen();
 
     printf("+%s[MENU]%s+\n", string(15, '-').c_str(), string(15, '-').c_str());
     for (auto it = menu.begin(); it != menu.end(); ++it)
@@ -170,10 +171,11 @@ int main()
     }
     cfg menu(cfgmenu);
 
+    // проверка меню
     if(!menu.check())
         printf("\n%s is wrong\n", CFGMENU);
     else
-        clear();
+        clearScreen();
 
     // запускаю поток обработки нажатия кнопки
     pthread_create(&thread, NULL, thread_waitkey, &key);
@@ -189,7 +191,6 @@ int main()
     // реакция на действия пользователя
     if (key == 0)
     {
-        //pthread_cancel(thread);
         run(menu.getSelValue());
         return 0;
     }
@@ -212,7 +213,7 @@ int main()
     {
         int index;
         int key = getch();
-        if (key == keyup)
+        if (key == keyup)           // нажата кнопка ВВЕРХ
         {
             index = std::stoi(menu["@"]);
             if (index > 0 && index < menu.count)
@@ -225,7 +226,7 @@ int main()
 
             drawMenu(menu);
         }
-        else if (key == keydown)
+        else if (key == keydown)    // нажата кнопка ВНИЗ
         {
             index = std::stoi(menu["@"]);
             if (index > -1 && index < menu.count - 1)
@@ -238,13 +239,13 @@ int main()
 
             drawMenu(menu);
         }
-        else if(key == keyselect)
+        else if(key == keyselect)   // нажата кнопка выбора
         {
             menu.save(cfgmenu);
             run(menu.getSelValue());
             return 0;
         }
-        else
+        else                        // нажата неправильная кнопка
         {
             std::cout << '\a';
         }
