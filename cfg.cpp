@@ -110,7 +110,7 @@ bool cfg::check()
     if (selindex < 0 || selindex >= count)
     {
         selindex = 0;
-        std::cout << "\a";
+        std::cout << '\a';
         return false;
     }
     return true;

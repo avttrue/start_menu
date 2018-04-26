@@ -25,10 +25,10 @@
 
 #define MAINCFG "cfg.cfg"
 #define MENUCFG "menu.cfg"
-#define KEYMENU 10        // код кнопки вызова меню
-#define KEYUP 119      // код кнопки ВВЕРХ
-#define KEYDOWN 115        // код кнопки ВНИЗ
-#define KEYSELECT 10    // код кнопки ВЫБОР
+#define KEYMENU 10          // код кнопки вызова меню
+#define KEYUP 119           // код кнопки ВВЕРХ
+#define KEYDOWN 115         // код кнопки ВНИЗ
+#define KEYSELECT 10        // код кнопки ВЫБОР
 
 
 // ожидание нажатия условленной клавиши из отдельного потока
@@ -155,7 +155,7 @@ int main()
         timer++;
     }
 
-    // пост-обработка
+    // реакция на действия пользователя
     if (key == 0)
     {
         //pthread_cancel(thread);
@@ -163,7 +163,7 @@ int main()
         return 0;
     }
 
-    // отрисока меню и обработка интерфейса
+    // отрисока меню и обработка ввода пользователя
     drawMenu(menu);
     for (;;)
     {
@@ -177,7 +177,7 @@ int main()
                 else
                 {
                     menu.setSelIndex(0);
-                    std::cout << "\a";
+                    std::cout << '\a';
                 }
 
                 drawMenu(menu);
@@ -190,7 +190,7 @@ int main()
                 else
                 {
                     menu.setSelIndex(menu.count - 1);
-                    std::cout << "\a";
+                    std::cout << '\a';
                 }
 
                 drawMenu(menu);
@@ -202,7 +202,7 @@ int main()
                 return 0;
 
             default:
-                std::cout << "\a";
+                std::cout << '\a';
                 break;
         }
     }
