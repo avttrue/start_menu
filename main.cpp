@@ -1,8 +1,16 @@
 /*
-    меню загрузки
-    author Трифонов Александр (ОКВ СФЗ) truetrifonov@yandex.ru
+    МЕНЮ ЗАГРУЗКИ
+    Трифонов Александр (ОКВ СФЗ) truetrifonov@yandex.ru
+    ---------------------------------------------------
+    Программа ждёт "wait" секунд, которые указаны в CFGMAIN
+    В течении указанного времени нужно нажать клавишу KEYMENU
+    После этого отображается меню загрузки, которое прочитывается из файла CFGMENU
+    При помощи клавиш KEYUP, KEYDOWN производится выбор
+    KEYSELECT - клавиша подтверждения
+    После подтверждения запускается на выполнение выбранная команда
 */
 
+#include <fstream>
 #include <iostream>
 #include <locale.h>
 #include <pthread.h>
@@ -26,10 +34,6 @@
 #define CFGMAIN "cfg.cfg"
 #define CFGMENU "menu.cfg"
 #define KEYMENU 10          // код кнопки вызова меню
-#define KEYUP 119           // код кнопки ВВЕРХ
-#define KEYDOWN 115         // код кнопки ВНИЗ
-#define KEYSELECT 10        // код кнопки ВЫБОР
-
 
 // ожидание нажатия условленной клавиши из отдельного потока
 void *thread_waitkey(void *yes)
@@ -110,6 +114,19 @@ void drawMenu(cfg menu)
     printf("%s\n", menu.getSelValue().c_str());
 }
 
+// проверка наличия файла
+bool isFileExist(char *filename)
+{
+    bool exist = false;
+    std::ifstream in(filename);
+ 
+    if(in.is_open())
+        exist = true;
+ 
+    in.close();
+    return exist;
+}
+
 /////////////////////////////////////////////////////////////////
 // main
 /////////////////////////////////////////////////////////////////
@@ -120,6 +137,9 @@ int main()
     pthread_t thread;   // поток обработки нажатия кнопки
     char cfgmain[1000]; // путь до основного конфига
     char cfgmenu[1000]; // путь до конфига меню
+    int keyup;          // клавиша выбора вверх
+    int keydown;        // клавиша выбора вниз
+    int keyselect;      // клавиша подтверждения выбора
 
     setlocale(0, "rus");
 
@@ -128,16 +148,26 @@ int main()
     if (catalog == NULL)
     {
         perror("ERROR: getcwd()");
-        return 0;
+        return 1;
     }
 
     // читаем и устанавливаем основные параметры
     snprintf(cfgmain, 1000, "%s%s%s", catalog, FSEP, CFGMAIN);
+    if(!isFileExist(cfgmain))
+    {
+        printf("\nFile '%s' not found\n", CFGMAIN);
+        return 1;
+    }
     cfg config(cfgmain);
     time = std::stoi(config["wait"]);
 
     // читаем содержание меню
     snprintf(cfgmenu, 1000, "%s%s%s", catalog, FSEP, CFGMENU);
+    if(!isFileExist(cfgmenu))
+    {
+        printf("\nFile '%s' not found\n", CFGMENU);
+        return 1;
+    }
     cfg menu(cfgmenu);
 
     if(!menu.check())
@@ -166,45 +196,57 @@ int main()
 
     // отрисока меню и обработка ввода пользователя
     drawMenu(menu);
+    try 
+    {
+        keyup = std::stoi(config["key_up"]);
+        keydown = std::stoi(config["key_down"]);
+        keyselect = std::stoi(config["key_select"]);
+    }
+    catch (std::invalid_argument) 
+    {
+        printf("\n%s is wrong\n", CFGMENU);
+        std::cout << '\a';
+        return 1;
+    }
     for (;;)
     {
         int index;
-        switch (getch())
+        int key = getch();
+        if (key == keyup)
         {
-            case KEYUP:
-                index = std::stoi(menu["@"]);
-                if (index > 0 && index < menu.count)
-                    menu.setSelIndex(index - 1);
-                else
-                {
-                    menu.setSelIndex(0);
-                    std::cout << '\a';
-                }
-
-                drawMenu(menu);
-                break;
-
-            case KEYDOWN:
-                index = std::stoi(menu["@"]);
-                if (index > -1 && index < menu.count - 1)
-                    menu.setSelIndex(index + 1);
-                else
-                {
-                    menu.setSelIndex(menu.count - 1);
-                    std::cout << '\a';
-                }
-
-                drawMenu(menu);
-                break;
-
-            case KEYSELECT:
-                menu.save(cfgmenu);
-                run(menu.getSelValue());
-                return 0;
-
-            default:
+            index = std::stoi(menu["@"]);
+            if (index > 0 && index < menu.count)
+                menu.setSelIndex(index - 1);
+            else
+            {
+                menu.setSelIndex(0);
                 std::cout << '\a';
-                break;
+            }
+
+            drawMenu(menu);
+        }
+        else if (key == keydown)
+        {
+            index = std::stoi(menu["@"]);
+            if (index > -1 && index < menu.count - 1)
+                menu.setSelIndex(index + 1);
+            else
+            {
+                menu.setSelIndex(menu.count - 1);
+                std::cout << '\a';
+            }
+
+            drawMenu(menu);
+        }
+        else if(key == keyselect)
+        {
+            menu.save(cfgmenu);
+            run(menu.getSelValue());
+            return 0;
+        }
+        else
+        {
+            std::cout << '\a';
         }
     }
 }
