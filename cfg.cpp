@@ -1,4 +1,5 @@
 #include "cfg.h"
+
 #include <fstream>
 #include <iostream>
 

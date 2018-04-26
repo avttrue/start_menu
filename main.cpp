@@ -126,7 +126,7 @@ int main()
     char *catalog = getcwd(NULL, 0);
     if (catalog == NULL)
     {
-        perror("ERROR: Ошибка getcwd()");
+        perror("ERROR: getcwd()");
         return 0;
     }
 
