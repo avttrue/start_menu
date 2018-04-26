@@ -23,8 +23,8 @@
 #define FSEP "/"
 #endif
 
-#define MAINCFG "cfg.cfg"
-#define MENUCFG "menu.cfg"
+#define CFGMAIN "cfg.cfg"
+#define CFGMENU "menu.cfg"
 #define KEYMENU 10          // код кнопки вызова меню
 #define KEYUP 119           // код кнопки ВВЕРХ
 #define KEYDOWN 115         // код кнопки ВНИЗ
@@ -88,9 +88,10 @@ void run(string cmd)
 // отрисовка меню
 void drawMenu(cfg menu)
 {
-    clear();
     int index = std::stoi(menu["@"]);
     int counter = 0;
+    
+    clear();
 
     printf("+%s[MENU]%s+\n", string(15, '-').c_str(), string(15, '-').c_str());
     for (auto it = menu.begin(); it != menu.end(); ++it)
@@ -131,16 +132,16 @@ int main()
     }
 
     // читаем и устанавливаем основные параметры
-    snprintf(cfgmain, 1000, "%s%s%s", catalog, FSEP, MAINCFG);
+    snprintf(cfgmain, 1000, "%s%s%s", catalog, FSEP, CFGMAIN);
     cfg config(cfgmain);
     time = std::stoi(config["wait"]);
 
     // читаем содержание меню
-    snprintf(cfgmenu, 1000, "%s%s%s", catalog, FSEP, MENUCFG);
+    snprintf(cfgmenu, 1000, "%s%s%s", catalog, FSEP, CFGMENU);
     cfg menu(cfgmenu);
 
     if(!menu.check())
-        printf("\n%s is wrong\n", MENUCFG);
+        printf("\n%s is wrong\n", CFGMENU);
     else
         clear();
 
